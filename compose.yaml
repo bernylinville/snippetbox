@@ -1,0 +1,14 @@
+services:
+  db:
+    image: mysql:8.0.42
+    ports:
+      - "127.0.0.1:3306:3306"
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: snippetbox
+      MYSQL_USER: snippetbox
+    volumes:
+      - ./data:/var/lib/mysql
+volumes:
+  data:
