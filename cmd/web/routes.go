@@ -2,7 +2,7 @@ package main
 
 import "net/http"
 
-// The routes() method returns a servemux containing our application routes.
+// routes 配置并返回应用程序路由
 func (app *application) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 

@@ -7,108 +7,59 @@ import (
 	"net/http"
 	"os"
 
+	// 导入我们创建的 models 包
+	"snippetbox.xmxxmx.us/internal/models"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Define an application struct to hold the application-wide dependencies for the
-// web application. For now we'll only include the structured logger, but we'll
-// add more to this as development progresses.
+// application 应用程序结构体，用于保存全局依赖项
+// 包含结构化日志器和代码片段模型
 type application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
-	// Define a new command-line flag with the name 'addr', a default value of ":4000"
-	// and some short help text explaining what the flag controls. The value of the
-	// flag will be stored in the addr variable at runtime.
+	// 定义命令行参数 addr，默认值为 ":4000"
 	addr := flag.String("addr", ":4000", "HTTP network address")
-	// Define a new command-line flag for the MySQL DSN string.
-	dsn := flag.String("dsn", "snippetbox:6w8bT4MYLCLZnmr+2FuGkg@/snippetbox?parseTime=true", "MySQL data source name")
-	// Importantly, we use the flag.Parse() function to parse the command-line flag.
-	// This reads in the command-line flag value and assigns it to the addr
-	// variable. You need to call this *before* you use the addr variable
-	// otherwise it will always contain the default value of ":4000". If any errors are
-	// encountered during parsing the application will be terminated.
+	// 定义 MySQL 数据源名称参数
+	dsn := flag.String("dsn", "snippetbox:Mz8nQ3vR7sT2uW5yE9aF4bG6cH1jL0kP@/snippetbox?parseTime=true", "MySQL data source name")
+	// 解析命令行参数，必须在使用参数前调用
 	flag.Parse()
 
-	// Use the slog.New() function to initialize a new structured logger, which
-	// writes to the standard out stream and uses the default settings.
+	// 初始化结构化日志器
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	// To keep the main() function tidy I've put the code for creating a connection
-	// pool into the separate openDB() function below. We pass openDB() the DSN
-	// from the command-line flag.
+	// 创建数据库连接池
 	db, err := openDB(*dsn)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
-	// We also defer a call to db.Close(), so that the connection pool is closed
-	// before the main() function exits.
+	// 延迟关闭数据库连接池
 	defer db.Close()
 
-	// nitialize a new instance of our application struct, containing the
-	//dependencies (for now, just the structured logger).
+	// 初始化应用程序实例，包含依赖项
 	app := &application{
-		logger: logger,
+		logger:   logger,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
-	// Use the http.NewServeMux() function to initialize a new servemux, then
-	// register the home function as the handler for the "/" URL pattern.
-	// Prefix the route patterns with the required HTTP method (for now, we will
-	// restrict all three routes to acting on GET requests).
-	// mux := http.NewServeMux()
+	// 路由配置已移至 routes() 方法
 
-	// Create a file server which serves files out of the "./ui/static" directory.
-	// Note that the path given to the http.Dir function is relative to the project
-	// directory root.
-	// fileServer := http.FileServer(http.Dir("./ui/static/"))
-
-	// Use the mux.Handle() function to register the file server as the handler for
-	// all URL paths that start with "/static/". For matching paths, we strip the
-	// "/static" prefix before the request reaches the file server.
-	// mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
-
-	// Swap the route declarations to use the application struct's methods as the
-	// handler functions.
-	// mux.HandleFunc("GET /{$}", app.home)                      // Restrict this route to exact matches on / only.
-	// mux.HandleFunc("GET /snippet/view/{id}", app.snippetView) // Add the {id} wildcard segment
-	// mux.HandleFunc("GET /snippet/create", app.snippetCreate)
-	// Create the new route, which is restricted to POST requests only.
-	// mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
-
-	// Print a log message to say that the server is starting.
-	// The value returned from the flag.String() function is a pointer to the flag
-	// value, not the value itself. So in this code, that means the addr variable
-	// is actually a pointer, and we need to dereference it (i.e. prefix it with
-	// the * symbol) before using it. Note that we're using the log.Printf()
-	// function to interpolate the address with the log message.
-	// log.Printf("Starting server on %s", *addr)
-
-	// Use the Info() method to log the starting server message at Info severity
-	// (along with the listen address as an attribute).
+	// 记录服务器启动信息
 	logger.Info("Starting server", "addr", *addr)
 
-	// Use the http.ListenAndServe() function to start a new web server. We pass in
-	// two parameters: the TCP network address to listen on (in this case ":4000")
-	// and the servemux we just created. If http.ListenAndServe() returns an error
-	// we use the log.Fatal() function to log the error message and terminate the
-	// program. Note that any error returned by http.ListenAndServe() is always
-	// non-nil.
-	// And we pass the dereferenced addr pointer to http.ListenAndServe() too.
-	// err := http.ListenAndServe(*addr, mux)
+	// 启动 HTTP 服务器
 	err = http.ListenAndServe(*addr, app.routes())
-	// log.Fatal(err)
-	// And we also use the Error() method to log any error message returned by
-	// http.ListenAndServe() at Error severity (with no additional attributes),
-	// and then call os.Exit(1) to terminate the application with exit code 1.
+	// 记录错误并退出
 	logger.Error(err.Error())
 	os.Exit(1)
 }
 
-// The openDB() function wraps sql.Open() and returns a sql.DB connection pool
-// for a given DSN.
+// openDB 创建并返回数据库连接池
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

@@ -9,6 +9,6 @@ services:
       MYSQL_DATABASE: snippetbox
       MYSQL_USER: snippetbox
     volumes:
-      - ./data:/var/lib/mysql
+      - data:/var/lib/mysql
 volumes:
   data:
