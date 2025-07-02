@@ -19,36 +19,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
-	}
+	// Call the newTemplateData() helper to get a templateData struct containing
+	// the 'default' data (which for now is just the current year), and add the
+	// snippets slice to it.
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
 
-	// 模板文件列表，基础模板必须在第一位
-	//files := []string{
-	//	"./ui/html/base.tmpl",
-	//	"./ui/html/partials/nav.tmpl",
-	//	"./ui/html/pages/home.tmpl",
-	//}
-
-	// 解析模板文件
-	//ts, err := template.ParseFiles(files...)
-	//if err != nil {
-	//	// log.Println(err.Error())
-	//
-	//	// 处理模板解析错误
-	//
-	//	app.serverError(w, r, err)
-	//	return
-	//}
-
-	// 执行模板渲染
-	//err = ts.ExecuteTemplate(w, "base", nil)
-	//if err != nil {
-	//	// 处理模板执行错误
-	//
-	//	app.serverError(w, r, err)
-	//	return
-	//}
+	// Use the new render helper.
+	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
 // snippetView 查看代码片段处理器
@@ -73,8 +51,11 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Write the snippet data as a plain-text HTTP response body.
-	fmt.Fprintf(w, "%+v", snnipet)
+	data := app.newTemplateData(r)
+	data.Snippet = snnipet
+
+	// Use the new render helper.
+	app.render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
 // snippetCreate 创建代码片段表单处理器
