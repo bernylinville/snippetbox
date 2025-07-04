@@ -79,13 +79,19 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
-	// 路由配置已移至 routes() 方法
+	// Initialize a new http.Server struct. We set the Addr and Handler fields so
+	// that the server uses the same network address and routes as before.
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+	}
 
 	// 记录服务器启动信息
-	logger.Info("Starting server", "addr", *addr)
+	logger.Info("Starting server", "addr", srv.Addr)
 
-	// 启动 HTTP 服务器
-	err = http.ListenAndServe(*addr, app.routes())
+	// Call the ListenAndServe() method on our new http.Server struct to start
+	// the server.
+	err = srv.ListenAndServe()
 	// 记录错误并退出
 	logger.Error(err.Error())
 	os.Exit(1)
