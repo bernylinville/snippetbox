@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (Snippet, error)
+	Latest() ([]Snippet, error)
+}
+
 // Snippet 定义代码片段结构体，用于存储单个代码片段的数据
 // 结构体字段与 MySQL 数据库中 snippets 表的字段一一对应
 type Snippet struct {
