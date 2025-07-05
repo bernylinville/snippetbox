@@ -3,8 +3,9 @@ package main
 import (
 	"html/template"
 	"path/filepath"
-	"snippetbox.xmxxmx.us/internal/models"
 	"time"
+
+	"snippetbox.xmxxmx.us/internal/models"
 )
 
 // Define a templateData type to act as the holding structure for
@@ -13,11 +14,13 @@ import (
 // to it as the project progresses.
 // Add a CurrentYear field to the templateData struct.
 type templateData struct {
-	CurrentYear int
-	Snippet     models.Snippet
-	Snippets    []models.Snippet
-	Form        any
-	Flash       string
+	CurrentYear     int
+	Snippet         models.Snippet
+	Snippets        []models.Snippet
+	Form            any
+	Flash           string
+	IsAuthenticated bool
+	CSRFToken       string
 }
 
 // Create a humanDate function which returns a nicely formatted string
